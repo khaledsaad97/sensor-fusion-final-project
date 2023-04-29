@@ -40,16 +40,16 @@ class Association:
         ############
         
         if len(meas_list) > 0:
-            self.unassigned_meas = meas_list
+            self.unassigned_meas = list(range(len(meas_list)))
         if len(track_list) > 0:
-            self.unassigned_tracks = track_list
+            self.unassigned_tracks = list(range(len(track_list)))
         if len(meas_list) > 0 and len(track_list) > 0: 
             self.association_matrix = np.inf*np.ones((len(track_list),len(meas_list))) 
             for i in range(len(track_list)): 
                 track = track_list[i]
                 for j in range(len(meas_list)):
                     meas = meas_list[j]
-                    dist = self.MHD(track, meas)
+                    dist = self.MHD(track, meas, KF)
                     if self.gating(dist):
                         self.association_matrix[i,j] = dist
                     else:
@@ -96,13 +96,13 @@ class Association:
         ############ 
         return update_track, update_meas     
 
-    def gating(self, MHD, sensor): 
+    def gating(self, MHD): 
         ############
         # TODO Step 3: return True if measurement lies inside gate, otherwise False
         ############
         
         # check if measurement lies inside gate
-        limit = chi2.ppf(params.gating_threshold, df=2)
+        limit = chi2.ppf(params.gating_threshold, df=params.dim_state)
         if MHD < limit:
             return True
         else:
@@ -118,8 +118,13 @@ class Association:
         ############
         
         # calc Mahalanobis distance
-        H = np.matrix([[1, 0, 0, 0],
-                       [0, 1, 0, 0]]) 
+        if meas.sensor.name == 'lidar':
+            H = np.matrix([[1, 0, 0, 0, 0, 0],
+                        [0, 1, 0, 0, 0, 0],
+                        [0, 0, 1, 0, 0, 0]])
+        elif meas.sensor.name == 'camera':
+            H = np.matrix([[1, 0, 0, 0, 0, 0],
+                        [0, 1, 0, 0, 0, 0]])
         gamma = meas.z - H*track.x
         S = H * track.P * H.transpose() + meas.R
         MHD = gamma.transpose()*np.linalg.inv(S)*gamma # Mahalanobis distance formula
