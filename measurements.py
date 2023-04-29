@@ -166,9 +166,10 @@ class Measurement:
             self.R = np.matrix([[sigma_lidar_x**2, 0, 0], # measurement noise covariance matrix
                                 [0, sigma_lidar_y**2, 0], 
                                 [0, 0, sigma_lidar_z**2]])
-            
+            self.width = z[4]
             self.length = z[5]
             self.height = z[3]
+            self.yaw = z[6]
         elif sensor.name == 'camera':
             
             ############
@@ -182,11 +183,10 @@ class Measurement:
             self.z[1] = z[1]
             self.R = np.matrix([[sigma_camera_i**2, 0], # measurement noise covariance matrix
                                 [0, sigma_camera_j**2]])
-            
-            self.width = z[4]
-            self.length = z[5]
-            self.height = z[3]
-            self.yaw = z[6]
+            self.length = z[3]
+            self.height = z[2]
+            self.width = 0
+            self.yaw = 0
             ############
             # END student code
             ############ 
