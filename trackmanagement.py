@@ -60,11 +60,13 @@ class Track:
                
         # other track attributes
         self.id = id
+        self.t = meas.t
+
         self.width = meas.width
         self.length = meas.length
         self.height = meas.height
         self.yaw =  np.arccos(M_rot[0,0]*np.cos(meas.yaw) + M_rot[0,1]*np.sin(meas.yaw)) # transform rotation from sensor to vehicle coordinates
-        self.t = meas.t
+
 
     def set_x(self, x):
         self.x = x
@@ -73,8 +75,8 @@ class Track:
         self.P = P  
         
     def set_t(self, t):
-        self.t = t  
-        
+        self.t = t
+          
     def update_attributes(self, meas):
         # use exponential sliding average to estimate dimensions and orientation
         if meas.sensor.name == 'lidar':
@@ -127,9 +129,10 @@ class Trackmanagement:
         ############ 
             
         # initialize new track with unassigned measurement
-        for j in unassigned_meas: 
-            if meas_list[j].sensor.name == 'lidar': # only initialize with lidar measurements
-                self.init_track(meas_list[j])
+        for j in unassigned_meas:
+            if (j < len (meas_list)):
+                if meas_list[j].sensor.name == 'lidar': # only initialize with lidar measurements
+                    self.init_track(meas_list[j])
             
     def addTrackToList(self, track):
         self.track_list.append(track)
@@ -150,7 +153,7 @@ class Trackmanagement:
         # - increase track score
         # - set track state to 'tentative' or 'confirmed'
         ############
-        track.score += 1.0/params.window
+        track.score += params.confirmed_threshold/3
         if (track.score >= 0.6 and track.score < 0.8):
             track.state = "tentative"
         if (track.score >= params.confirmed_threshold):
